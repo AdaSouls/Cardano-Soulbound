@@ -74,7 +74,7 @@ validator(script: Credential) {
 
 validator {
   fn redeem(datum: DatumData, _rdmr: Void, ctx: ScriptContext) -> Bool {
-    let DatumData { status, .. }: DatumData = datum
+    let DatumData { status, beneficiary, .. }: DatumData = datum
     if status != "issued" {
       False?
     } else {
@@ -96,9 +96,13 @@ validator {
       // expected output data
       let output_data = DatumData { ..datum, status: "claimed" }
 
-      without_lovelace(value) == without_lovelace(new_value) && when
-        new_datum
-      is {
+      // must be signed by beneficiary
+      let beneficiary_signed =
+        list.has(transaction.extra_signatories, beneficiary)
+
+      beneficiary_signed && without_lovelace(value) == without_lovelace(
+        new_value,
+      ) && when new_datum is {
         DatumHash(hash) -> {
           expect Some(data) = find_datum([output], dict.new(), hash)
           expect input_data: DatumData = data
