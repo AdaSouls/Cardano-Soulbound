@@ -1,11 +1,11 @@
-name = "tango-crypto/soul-bound"
+name = "nft/soulbound"
 version = "0.0.0"
 license = "Apache-2.0"
-description = "Aiken contracts for project 'tango-crypto/soul-bound'"
+description = "Aiken contracts for project 'nft/soulbound'"
 
 [repository]
-user = "tango-crypto"
-project = "soul-bound"
+user = "leobel"
+project = "nft/soulbound"
 platform = "github"
 
 [[dependencies]]
