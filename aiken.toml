@@ -1,11 +1,11 @@
-name = "nft/soulbound"
+name = "AdaSouls/cardano-soulbound"
 version = "0.0.0"
 license = "Apache-2.0"
-description = "Aiken contracts for project 'nft/soulbound'"
+description = "Aiken contracts for project 'AdaSouls/cardano-soulbound'"
 
 [repository]
-user = "leobel"
-project = "nft/soulbound"
+user = "AdaSouls"
+project = "cardano-soulbound"
 platform = "github"
 
 [[dependencies]]
