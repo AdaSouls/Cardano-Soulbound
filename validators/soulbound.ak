@@ -18,7 +18,7 @@ type DatumData {
   metadata: Data,
 }
 
-type Redeemer {
+type RedeemerData {
   Mint { msg: ByteArray }
   Burn
 }
@@ -27,7 +27,7 @@ type VerificationKeyHash =
   Hash<Blake2b_224, VerificationKey>
 
 validator(script: Credential) {
-  fn mint(redeemer: Redeemer, ctx: ScriptContext) -> Bool {
+  fn mint(redeemer: RedeemerData, ctx: ScriptContext) -> Bool {
     expect ScriptCredential(script_hash) = script
     let ScriptContext { transaction, purpose } = ctx
     expect tx.Mint(policy_id) = purpose
@@ -99,7 +99,6 @@ validator {
       // must be signed by beneficiary
       let beneficiary_signed =
         list.has(transaction.extra_signatories, beneficiary)
-
       beneficiary_signed && without_lovelace(value) == without_lovelace(
         new_value,
       ) && when new_datum is {
