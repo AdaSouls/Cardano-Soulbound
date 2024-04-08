@@ -1,4 +1,4 @@
-import { applyParams, readValidators } from "./utils.ts";
+import { Credential, DatumMetadata, Policy, applyParams, readValidators } from "./utils.ts";
 import {
     Blockfrost,
     Constr,
@@ -9,7 +9,7 @@ import {
     applyDoubleCborEncoding,
     fromText,
     getAddressDetails,
-} from "https://deno.land/x/lucid@0.9.3/mod.ts";
+} from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
 
 const env = await load();
@@ -32,13 +32,15 @@ const redeem: SpendingValidator = {
 };
 const lockAddress = lucid.utils.validatorToAddress(redeem);
 const scriptHash = lucid.utils.validatorToScriptHash(redeem);
-const credential = new Constr(1, [scriptHash]);
-const policy = {
+const credential: Credential = { ScriptCredential: [scriptHash] };
+
+const signerKey = lucid.utils.getAddressDetails(addr).paymentCredential!.hash
+const policy: Policy = {
     type: 'All',
     scripts: [
         {
             type: 'Sig',
-            keyHash: lucid.utils.getAddressDetails(addr).paymentCredential?.hash,
+            keyHash: signerKey,
             slot: null,
             require: null
         }
@@ -48,7 +50,8 @@ const policy = {
     require: null,
 };
 
-const { policyId } = applyParams(validators.mint.script, lucid, policy, credential);
+const nonce = "9565b074c5c930aff80cac59a2278b68";
+const { policyId } = applyParams(validators.mint.script, lucid, policy, credential, nonce);
 
 
 const utxos = await lucid?.wallet.getUtxos()!;
@@ -62,26 +65,36 @@ const lovelace = 1_000_000;
 const tokenName = 'SoulBound#001';
 const assetName = `${policyId}${fromText(tokenName)}`;
 
-const msg = fromText("claimed");
+const msg = fromText("Claimed");
 const beneficiary = getAddressDetails(utxo.address).paymentCredential!.hash;
 
-const datum = Data.to(new Constr(0, [
+const data = Data.fromJson({
+    [policyId]: {
+        [tokenName]: {
+            name: tokenName,
+            foo: "bar"
+        }
+    }
+})
+const d: DatumMetadata = {
     beneficiary,
-    msg,
-    Data.fromJson({
-        name: tokenName,
-        version: 1
-    })
-]))
+    status: msg,
+    metadata: {
+        data,
+        version: 1n,
+        extra: null
+    }
+}
 
-console.log(datum);
+const datum = Data.to(d, DatumMetadata);
+console.log('Datum', datum);
 
 const scriptUtxo: UTxO = {
     address: lockAddress,
-    txHash: "b85d023ae8c8c2d65edbeee2211122c1e0687129a777e39a6b481db469bb3750",
+    txHash: "ff66c31c1ec01b645da543c51fac165f0e0cd5515c8baba319547dc6b52d9f65",
     outputIndex: 0,
-    assets: { lovelace: BigInt(1_396_440), [assetName]: BigInt(1) },
-    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da946697373756564a2446e616d654d536f756c426f756e64233030314776657273696f6e01ff"
+    assets: { lovelace: BigInt(1_749_860), [assetName]: BigInt(1) },
+    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da947436c61696d6564d8799fa158383862323332333130353462356234306138306433656464393836663165633838666361633137626439643561376561393261353364626366a14d536f756c426f756e6423303031a2446e616d654d536f756c426f756e642330303143666f6f4362617201d87a80ffff"
 }
 
 const tx = await lucid

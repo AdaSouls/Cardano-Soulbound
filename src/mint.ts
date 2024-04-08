@@ -118,7 +118,7 @@ const tx = await lucid
 const txSigned = await tx.sign().complete();
 console.log(txSigned.toString());
 
-// const txHash = await txSigned.submit();
-// console.log('Tx Id:', txHash);
-// const success = await lucid.awaitTx(txHash);
-// console.log('Success?', success);
+const txHash = await txSigned.submit();
+console.log('Tx Id:', txHash);
+const success = await lucid.awaitTx(txHash);
+console.log('Success?', success);
