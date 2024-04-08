@@ -1,12 +1,13 @@
-import { applyParams, readValidators } from "./utils.ts";
+import { applyParams, readValidators, MintRedeemer, DatumMetadata, Credential, Policy } from "./utils.ts";
 import {
     Blockfrost,
-    Constr,
     Data,
     Lucid,
+    SpendingValidator,
+    applyDoubleCborEncoding,
     fromText,
     getAddressDetails,
-} from "https://deno.land/x/lucid@0.9.3/mod.ts";
+} from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
 
 const env = await load();
@@ -20,12 +21,35 @@ const lucid = await Lucid.new(
 );
 
 lucid.selectWalletFromPrivateKey(await Deno.readTextFile("./me.sk"));
+const addr = await Deno.readTextFile("./me.addr");
 
+const validators = readValidators();
+const redeem: SpendingValidator = {
+    type: "PlutusV2",
+    script: applyDoubleCborEncoding(validators.redeem.script)
+};
+const lockAddress = lucid.utils.validatorToAddress(redeem);
+const scriptHash = lucid.utils.validatorToScriptHash(redeem);
+const credential: Credential = { ScriptCredential: [scriptHash] };
 
-const validatos = readValidators();
+const signerKey = lucid.utils.getAddressDetails(addr).paymentCredential!.hash
+const policy: Policy = {
+    type: 'All',
+    scripts: [
+        {
+            type: 'Sig',
+            keyHash: signerKey,
+            slot: null,
+            require: null
+        }
+    ],
+    keyHash: null,
+    slot: null,
+    require: null,
+};
 
-const { mint, policyId, lockAddress } = applyParams(validatos, lucid);
-
+const nonce = "9565b074c5c930aff80cac59a2278b68";
+const { mint, policyId } = applyParams(validators.mint.script, lucid, policy, credential, nonce);
 
 const utxos = await lucid?.wallet.getUtxos()!;
 console.log('UTXOS:', utxos);
@@ -38,20 +62,35 @@ const lovelace = 1_000_000;
 const tokenName = 'SoulBound#001';
 const assetName = `${policyId}${fromText(tokenName)}`;
 
-const msg = fromText("issued");
-const mintRedeemer = Data.to(new Constr(0, [msg]));
 const beneficiary = getAddressDetails(utxo.address).paymentCredential!.hash;
 
-const datum = Data.to(new Constr(0, [
-    beneficiary,
-    msg,
-    Data.fromJson({
-        name: tokenName,
-        version: 1
-    })
-]))
+const msg = fromText("Issued");
+// const mintRedeemer = Data.to(new Constr(0, [msg]));
+const minter: MintRedeemer = { Mint: { msg } };
+const mintRedeemer = Data.to(minter, MintRedeemer);
+console.log('Redeemer:', mintRedeemer);
 
-console.log(datum);
+
+const data = Data.fromJson({
+    [policyId]: {
+        [tokenName]: {
+            name: tokenName,
+            foo: "bar"
+        }
+    }
+})
+const d: DatumMetadata = {
+    beneficiary,
+    status: msg,
+    metadata: {
+        data,
+        version: 1n,
+        extra: null
+    }
+}
+
+const datum = Data.to(d, DatumMetadata);
+console.log('Datum', datum);
 
 const tx = await lucid
     .newTx()
@@ -61,7 +100,7 @@ const tx = await lucid
     // mint 1 of the asset
     .mintAssets(
         { [assetName]: BigInt(1) },
-        // this redeemer is the first argument to the gift_card validator
+        // this redeemer is the first argument
         mintRedeemer
     )
     .payToContract(
@@ -74,12 +113,12 @@ const tx = await lucid
             [assetName]: BigInt(1)
         }
     )
+    .addSignerKey(signerKey)
     .complete();
 const txSigned = await tx.sign().complete();
 console.log(txSigned.toString());
 
-const txHash = await txSigned.submit();
-console.log('Tx Id:', txHash);
-const success = await lucid.awaitTx(txHash);
-console.log('Success?', success);
-
+// const txHash = await txSigned.submit();
+// console.log('Tx Id:', txHash);
+// const success = await lucid.awaitTx(txHash);
+// console.log('Success?', success);

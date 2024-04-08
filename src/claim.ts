@@ -4,7 +4,9 @@ import {
     Constr,
     Data,
     Lucid,
+    SpendingValidator,
     UTxO,
+    applyDoubleCborEncoding,
     fromText,
     getAddressDetails,
 } from "https://deno.land/x/lucid@0.9.3/mod.ts";
@@ -21,11 +23,32 @@ const lucid = await Lucid.new(
 );
 
 lucid.selectWalletFromPrivateKey(await Deno.readTextFile("./me.sk"));
+const addr = await Deno.readTextFile("./me.addr");
 
+const validators = readValidators();
+const redeem: SpendingValidator = {
+    type: "PlutusV2",
+    script: applyDoubleCborEncoding(validators.redeem.script)
+};
+const lockAddress = lucid.utils.validatorToAddress(redeem);
+const scriptHash = lucid.utils.validatorToScriptHash(redeem);
+const credential = new Constr(1, [scriptHash]);
+const policy = {
+    type: 'All',
+    scripts: [
+        {
+            type: 'Sig',
+            keyHash: lucid.utils.getAddressDetails(addr).paymentCredential?.hash,
+            slot: null,
+            require: null
+        }
+    ],
+    keyHash: null,
+    slot: null,
+    require: null,
+};
 
-const validatos = readValidators();
-
-const { redeem, policyId, lockAddress } = applyParams(validatos, lucid);
+const { policyId } = applyParams(validators.mint.script, lucid, policy, credential);
 
 
 const utxos = await lucid?.wallet.getUtxos()!;
