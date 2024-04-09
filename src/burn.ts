@@ -59,14 +59,13 @@ const minter: MintRedeemer = "Burn";
 const mintRedeemer = Data.to(minter, MintRedeemer);
 const claimer: ClaimRedeemer = "BurnToken";
 const claimRedeemer = Data.to(claimer, ClaimRedeemer);
-console.log('Redeemer:', mintRedeemer);
 
 const tokenUtxo: UTxO = {
     address: lockAddress,
-    txHash: "14de38d13a5b354441e9a4ba2700d6e30ed4142f79533b2e312b082f68c6e3ec",
+    txHash: "20618798cabdd8fc91756b3865c73b699c90ed3c343eaf11ada229c398ae2777",
     outputIndex: 0,
     assets: { lovelace: BigInt(1_749_860), [assetName]: BigInt(1) },
-    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da947436c61696d6564d8799fa158386362353965303338636466303536373764303065353365363937356434363133626134306236626637396434626639326337643139383563a14d536f756c426f756e6423303031a2446e616d654d536f756c426f756e642330303143666f6f4362617201d87a80ffff"
+    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da947436c61696d6564d8799fa158383732323562636633613131316263326239653561623962323730663233376364323466663036656634383863623933383166666461386639a14d536f756c426f756e6423303031a2446e616d654d536f756c426f756e642330303143666f6f4362617201d87a80ffff"
 }
 
 const tx = await lucid
@@ -81,16 +80,6 @@ const tx = await lucid
         mintRedeemer
     )
     .attachSpendingValidator(redeem)
-    // .payToContract(
-    //     lockAddress,
-    //     {
-    //         inline: datum,
-    //     },
-    //     {
-    //         lovelace: BigInt(lovelace),
-    //         [assetName]: BigInt(1)
-    //     }
-    // )
     .addSignerKey(signerKey)
     .complete();
 const txSigned = await tx.sign().complete();
