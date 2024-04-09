@@ -33,7 +33,9 @@ export function readValidators(): Validators {
 
 export type AppliedValidators = {
   mint: MintingPolicy;
+  redeem: SpendingValidator;
   policyId: string;
+  lockAddress: string;
 };
 
 const ScriptType = Data.Enum([
@@ -86,6 +88,13 @@ const MintRedeemerSchema = Data.Enum([
 export type MintRedeemer = Data.Static<typeof MintRedeemerSchema>;
 export const MintRedeemer = MintRedeemerSchema as unknown as MintRedeemer;
 
+const ClaimRedeemerSchema = Data.Enum([
+  Data.Literal("ClaimToken"),
+  Data.Literal("BurnToken")
+]);
+export type ClaimRedeemer = Data.Static<typeof ClaimRedeemerSchema>;
+export const ClaimRedeemer = ClaimRedeemerSchema as unknown as ClaimRedeemer;
+
 const DatumMetadataSchema = Data.Object({
   beneficiary: Data.Bytes(),
   status: Data.Bytes(),
@@ -100,13 +109,23 @@ export const DatumMetadata = DatumMetadataSchema as unknown as DatumMetadata;
 
 export function applyParams(
   mint_script: string,
+  redeem_script: string,
   lucid: Lucid,
   policy: Policy,
-  credential: Credential,
+  // credential: Credential,
   nonce?: string
 ): AppliedValidators {
 
-  const params = Data.from(Data.to({
+  const redeemParams = Data.from(Data.to(policy, Policy))
+  const redeem: SpendingValidator = {
+    type: "PlutusV2",
+    script: applyDoubleCborEncoding(applyParamsToScript(redeem_script, [redeemParams]))
+  };
+  const lockAddress = lucid.utils.validatorToAddress(redeem);
+  const scriptHash = lucid.utils.validatorToScriptHash(redeem);
+  const credential: Credential = { ScriptCredential: [scriptHash] };
+
+  const mintParams = Data.from(Data.to({
     policy: policy,
     script: credential,
     nonce: nonce || randomNonce()
@@ -116,7 +135,7 @@ export function applyParams(
     type: "PlutusV2",
     script: applyDoubleCborEncoding(applyParamsToScript(mint_script,
       [
-        params
+        mintParams
       ]
     ))
   };
@@ -125,7 +144,9 @@ export function applyParams(
 
   return {
     mint,
+    redeem,
     policyId,
+    lockAddress
   };
 }
 

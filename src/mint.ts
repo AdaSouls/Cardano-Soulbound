@@ -24,13 +24,7 @@ lucid.selectWalletFromPrivateKey(await Deno.readTextFile("./me.sk"));
 const addr = await Deno.readTextFile("./me.addr");
 
 const validators = readValidators();
-const redeem: SpendingValidator = {
-    type: "PlutusV2",
-    script: applyDoubleCborEncoding(validators.redeem.script)
-};
-const lockAddress = lucid.utils.validatorToAddress(redeem);
-const scriptHash = lucid.utils.validatorToScriptHash(redeem);
-const credential: Credential = { ScriptCredential: [scriptHash] };
+
 
 const signerKey = lucid.utils.getAddressDetails(addr).paymentCredential!.hash
 const policy: Policy = {
@@ -49,7 +43,7 @@ const policy: Policy = {
 };
 
 const nonce = "9565b074c5c930aff80cac59a2278b68";
-const { mint, policyId } = applyParams(validators.mint.script, lucid, policy, credential, nonce);
+const { mint, policyId, lockAddress } = applyParams(validators.mint.script, validators.redeem.script, lucid, policy, nonce);
 
 const utxos = await lucid?.wallet.getUtxos()!;
 console.log('UTXOS:', utxos);

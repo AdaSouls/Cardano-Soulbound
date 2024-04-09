@@ -3,13 +3,14 @@ use aiken/interval
 use aiken/list
 use aiken/transaction.{
   DatumHash, InlineDatum, Output, ScriptContext, Spend, Transaction,
-  ValidityRange, find_datum, find_script_outputs,
+  ValidityRange, find_datum, find_input, find_script_outputs,
 } as tx
 use aiken/transaction/credential.{Address, Credential, ScriptCredential}
 use aiken/transaction/value.{without_lovelace}
 use soulbound/types.{
-  After, All, Any, AtLeast, Before, Burn, DatumData, Mint, NativeScript, Policy,
-  RedeemerData, Sig, VerificationKeyHash,
+  After, All, Any, AtLeast, Before, Burn, BurnToken, ClaimRedeemerData,
+  ClaimToken, DatumData, Mint, NativeScript, Policy, RedeemerData, Sig,
+  VerificationKeyHash,
 }
 
 pub fn mint_validator(
@@ -28,27 +29,27 @@ pub fn mint_validator(
     )?
   expect tx.Mint(policy_id) = purpose
   let Transaction { outputs, mint, .. } = transaction
-  // TODO: allow multiple tokens mints at once
-  expect [(asset_name, amount)] =
-    mint
-      |> value.from_minted_value
-      |> value.tokens(policy_id)
-      |> dict.to_list()
-  // Token must go to locking address
-  expect Some(output) =
-    list.find(
-      outputs,
-      fn(output) {
-        let Address { payment_credential, .. } = output.address
-        when payment_credential is {
-          ScriptCredential(hash) -> (hash == script_hash)?
-          _ -> False?
-        }
-      },
-    )
   when redeemer is {
     Mint(msg) -> {
       expect msg == "Issued"
+      // TODO: allow multiple tokens mint/burn at once
+      expect [(asset_name, amount)] =
+        mint
+          |> value.from_minted_value
+          |> value.tokens(policy_id)
+          |> dict.to_list()
+      // Token must go to locking address
+      expect Some(output) =
+        list.find(
+          outputs,
+          fn(output) {
+            let Address { payment_credential, .. } = output.address
+            when payment_credential is {
+              ScriptCredential(hash) -> (hash == script_hash)?
+              _ -> False?
+            }
+          },
+        )
       let Output { value: val, datum, .. } = output
       expect [(token_name, token_amount)] =
         val
@@ -65,54 +66,94 @@ pub fn mint_validator(
         _ -> False?
       }
     }
-    Burn -> True
+    Burn ->
+      mint
+        |> value.from_minted_value
+        |> value.flatten
+        |> list.all(
+             fn(asset) {
+               let (p, _, am) = asset
+               p != policy_id || am == -1
+             },
+           )
   }
 }
 
 pub fn redeem_validator(
+  policy: Policy,
   datum: DatumData,
-  _rdmr: Void,
+  redeemer: ClaimRedeemerData,
   ctx: ScriptContext,
 ) -> Bool {
-  let DatumData { status, beneficiary, .. }: DatumData = datum
-  if status != "Issued" {
-    False?
-  } else {
-    let ScriptContext { transaction, purpose } = ctx
-    expect Spend(my_output_reference) = purpose
-    expect Some(input) =
-      transaction.inputs
-        |> tx.find_input(my_output_reference)
-    let Output { address, value, .. } = input.output
+  when redeemer is {
+    ClaimToken -> {
+      let DatumData { status, beneficiary, .. }: DatumData = datum
+      if status != "Issued" {
+        False?
+      } else {
+        let ScriptContext { transaction, purpose } = ctx
+        expect Spend(my_output_reference) = purpose
+        expect Some(input) =
+          transaction.inputs
+            |> tx.find_input(my_output_reference)
+        let Output { address, value, .. } = input.output
 
-    // get script output
-    let Address { payment_credential, .. } = address
-    expect ScriptCredential(script_hash) = payment_credential
-    expect [output] = find_script_outputs(transaction.outputs, script_hash)
+        // get script output
+        let Address { payment_credential, .. } = address
+        expect ScriptCredential(script_hash) = payment_credential
+        expect [output] = find_script_outputs(transaction.outputs, script_hash)
 
-    // get output value and datum
-    let Output { value: new_value, datum: new_datum, .. } = output
+        // get output value and datum
+        let Output { value: new_value, datum: new_datum, .. } = output
 
-    // expected output data
-    let output_data = DatumData { ..datum, status: "Claimed" }
+        // expected output data
+        let output_data = DatumData { ..datum, status: "Claimed" }
 
-    // must be signed by beneficiary
-    let beneficiary_signed =
-      list.has(transaction.extra_signatories, beneficiary)
-    beneficiary_signed && without_lovelace(value) == without_lovelace(new_value) && when
-      new_datum
-    is {
-      DatumHash(hash) -> {
-        expect Some(data) = find_datum([output], dict.new(), hash)
-        expect input_data: DatumData = data
-        (output_data == input_data)?
+        // must be signed by beneficiary
+        let beneficiary_signed =
+          list.has(transaction.extra_signatories, beneficiary)
+        beneficiary_signed && without_lovelace(value) == without_lovelace(
+          new_value,
+        ) && when new_datum is {
+          DatumHash(hash) -> {
+            expect Some(data) = find_datum([output], dict.new(), hash)
+            expect input_data: DatumData = data
+            (output_data == input_data)?
+          }
+
+          InlineDatum(data) -> {
+            expect input_data: DatumData = data
+            (output_data == input_data)?
+          }
+          _ -> False?
+        }
       }
+    }
+    BurnToken -> {
+      let ScriptContext { transaction, purpose } = ctx
+      expect
+        check_policy(
+          transaction.extra_signatories,
+          transaction.validity_range,
+          policy,
+        )?
+      let Transaction { mint, .. } = transaction
+      expect Spend(my_output_reference) = purpose
 
-      InlineDatum(data) -> {
-        expect input_data: DatumData = data
-        (output_data == input_data)?
-      }
-      _ -> False?
+      expect Some(input) =
+        ctx.transaction.inputs
+          |> find_input(my_output_reference)
+      let Output { value: input_value, .. } = input.output
+      // allow burning only one token at a time.
+      expect [(p, name, am)] =
+        mint
+          |> value.from_minted_value
+          |> value.flatten
+      expect [(policy_id, asset_name, _)] =
+        input_value
+          |> value.without_lovelace
+          |> value.flatten
+      policy_id == p && asset_name == name && am == -1
     }
   }
 }

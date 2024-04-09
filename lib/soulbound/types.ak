@@ -19,6 +19,11 @@ pub type RedeemerData {
   Burn
 }
 
+pub type ClaimRedeemerData {
+  ClaimToken
+  BurnToken
+}
+
 pub type VerificationKeyHash =
   Hash<Blake2b_224, VerificationKey>
 
