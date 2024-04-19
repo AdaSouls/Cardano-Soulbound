@@ -1,6 +1,6 @@
 # Cardano Soulbound
 
-In this repo you'll find the smart contracts for [Soulbound]() Protocol. All soulbound collections can specify a set of rules to restrict who, how and when tokens can be minted/claimed/burnt. Such rules are the equivalent to a native script meaning you can specify signers (e.g. All, Any, AtLeast, One) and before and after time constraint. Furthemore tokens metadata should have a `beneficiary` who can claim the token and a status (either `Issued` or `Claimed`). Tokens can only be claimend by the `beneficiary` with status `Issued`.
+In this repo you'll find the smart contracts for [Soulbound-CIP](https://github.com/AdaSouls/CIPs/tree/master/CIP-0888). All soulbound collections can specify a set of rules to restrict who, how and when tokens can be minted/claimed/burnt. Such rules are the equivalent to a native script meaning you can specify signers (e.g. All, Any, AtLeast, One) and before and after time constraint. Furthemore tokens metadata should have a `beneficiary` who can claim the token and a status (either `Issued` or `Claimed`). Tokens can only be claimend by the `beneficiary` with status `Issued`.
 
 Normal flow starts minting the token which will have declared the `beneficiary` and status `Issued`. Then beneficiary can claim the token to start owning it. Tokens can be removed if the policy rules in the collection are met at any time (whether the token is claimed or not).
 
@@ -74,12 +74,14 @@ Tx Id: 4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814
 Success? true
 ```
 
-Get the transaction id and navigate to [https://preview.cardanoscan.io/transaction/4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814](https://preview.cardanoscan.io/transaction/4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814). You'll find the new token minted there
+Get the transaction id and navigate to [cardanoscan tx](https://preview.cardanoscan.io/transaction/4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814). You'll find the new token minted there
+![Screen Shot 2024-04-19 at 2 33 45 PM](https://github.com/AdaSouls/Cardano-Soulbound/assets/16786232/68863c3d-a106-45aa-8884-4be57e9c9d31)
+
 
 > [!NOTE]
-> Sometimes network explores could take a while to reflect new transactions
+> Sometimes network explores takes a while to reflect new transactions
 
-On Cardanoscan UTxO transaction's section you'll find something like this, showing the new token locked into the smart contract address with a datum representing the token's metadata (See more about metadata here: [Soulbound-CIP]()). The metadata in our case looks like this:
+On Cardanoscan UTxO transaction's section you'll find something like this, showing the new token locked into the smart contract address with a datum representing the token's metadata (See more about metadata here: [Soulbound-CIP](https://github.com/AdaSouls/CIPs/tree/master/CIP-0888)). The metadata in our case looks like this:
 
 ```json
 {
@@ -123,6 +125,9 @@ Output will be similar to this:
 Tx Id: 445a2487e25b629691a32114b68f13b31e27bdd0dfc3380f8b221a272ace866d
 Success? true
 ```
+[cardanoscan tx](https://preview.cardanoscan.io/transaction/445a2487e25b629691a32114b68f13b31e27bdd0dfc3380f8b221a272ace866d)
+![Screen Shot 2024-04-19 at 2 55 46 PM](https://github.com/AdaSouls/Cardano-Soulbound/assets/16786232/fd8474f1-4c10-444e-b4ec-b4fc8d32b83c)
+
 
 New transaction will have the token with the new metadata:
 ```json
@@ -165,4 +170,6 @@ Tx Id: 008c73029e5c5bb48b8afa664db16a7fa5cfeec68ccbb1a7654028ed2bd5d260
 Success? true
 ```
 
-After that transaction is confirmed the token will be effectively removed from the blockchain.
+After that transaction is confirmed the token will be effectively removed from the blockchain [cardanoscan tx](https://preview.cardanoscan.io/transaction/008c73029e5c5bb48b8afa664db16a7fa5cfeec68ccbb1a7654028ed2bd5d260). 
+![Screen Shot 2024-04-19 at 4 11 52 PM](https://github.com/AdaSouls/Cardano-Soulbound/assets/16786232/e835db51-52a9-4c5a-9dad-bd5d348c0ef9)
+![Screen Shot 2024-04-19 at 4 12 07 PM](https://github.com/AdaSouls/Cardano-Soulbound/assets/16786232/ff96a067-1387-4de8-954a-9ef38c1b08e1)
