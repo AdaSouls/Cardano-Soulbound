@@ -53,7 +53,7 @@ console.log('Script Address:', lockAddress);
 const utxo = utxos[0];
 
 const lovelace = 1_000_000;
-const tokenName = 'SoulBound#001';
+const tokenName = 'SoulboundTest#001';
 const assetName = `${policyId}${fromText(tokenName)}`;
 
 const beneficiary = getAddressDetails(utxo.address).paymentCredential!.hash;

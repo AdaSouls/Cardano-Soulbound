@@ -55,7 +55,7 @@ console.log('Script Address:', lockAddress);
 const utxo = utxos[0];
 
 const lovelace = 1_000_000;
-const tokenName = 'SoulBound#001';
+const tokenName = 'SoulboundTest#001';
 const assetName = `${policyId}${fromText(tokenName)}`;
 
 const msg = fromText("Claimed");
@@ -86,10 +86,10 @@ const claimRedeemer = Data.to(claimer, ClaimRedeemer);
 
 const tokenUtxo: UTxO = {
     address: lockAddress,
-    txHash: "fa0bbe60d5c8da6c0b2c2266fd9062bc332da3dd5d2532fb9b1b7b21db433bc9",
+    txHash: "4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814",
     outputIndex: 0,
-    assets: { lovelace: BigInt(1_745_550), [assetName]: BigInt(1) },
-    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da946497373756564d8799fa158383732323562636633613131316263326239653561623962323730663233376364323466663036656634383863623933383166666461386639a14d536f756c426f756e6423303031a2446e616d654d536f756c426f756e642330303143666f6f4362617201d87a80ffff"
+    assets: { lovelace: BigInt(1_797_270), [assetName]: BigInt(1) },
+    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da946497373756564d8799fa158383732323562636633613131316263326239653561623962323730663233376364323466663036656634383863623933383166666461386639a151536f756c626f756e645465737423303031a2446e616d6551536f756c626f756e64546573742330303143666f6f4362617201d87a80ffff"
 }
 
 const tx = await lucid
