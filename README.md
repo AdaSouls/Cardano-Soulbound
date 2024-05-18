@@ -1,11 +1,10 @@
 # Cardano Soulbound
 
-In this repo you'll find the smart contracts for [Soulbound-CIP](https://github.com/AdaSouls/CIPs/tree/master/CIP-0888). All soulbound collections can specify a set of rules to restrict who, how and when tokens can be minted/claimed/burnt. Such rules are the equivalent to a native script meaning you can specify signers (e.g. All, Any, AtLeast, One) and before and after time constraint. Furthemore tokens metadata should have a `beneficiary` who can claim the token and a status (either `Issued` or `Claimed`). Tokens can only be claimend by the `beneficiary` with status `Issued`.
+In this repo you'll find the smart contracts for [Soulbound-CIP](https://github.com/AdaSouls/CIPs/tree/master/CIP-0888). All soulbound collections can specify a set of rules to restrict who, how and when tokens can be minted/claimed/burnt. Such rules are the equivalent to a native script meaning you can specify signers (e.g. All, Any, AtLeast, One) and before and after time constraint. Furthemore tokens metadata should have a `beneficiary` who can claim the token and a status (either `Issued` or `Claimed`). Tokens can only be claimed by the `beneficiary` with status `Issued`.
 
-Normal flow starts minting the token which will have declared the `beneficiary` and status `Issued`. Then beneficiary can claim the token to start owning it. Tokens can be removed if the policy rules in the collection are met at any time (whether the token is claimed or not).
+Normal flow starts with the mint of a token, which will have declared the `beneficiary` and status `Issued`. Then `beneficiary` can claim the token to own it. Tokens can be removed if the policy rules in the collection are met at any time (whether the token is claimed or not).
 
-
-Smart Contracts code is based on aiken (`aiken-lang/stdlib v1.7.0`) and are parameterized, meaning you'll need to specify the policy restrictions for your collection which will effectively create the unique policy id for it. See the offchain section for more details.
+Smart Contracts code is based on Aiken (`aiken-lang/stdlib v1.7.0`) and are parameterized, meaning you will need to specify the policy restrictions for your collection, which will effectively create the unique policy id for it. See the offchain section for more details.
 
 ## Building
 
