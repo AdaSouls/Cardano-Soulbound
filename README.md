@@ -84,7 +84,8 @@ On Cardanoscan UTxO transaction's section you'll find something like this, showi
 
 ```json
 {
-    "beneficiary": "3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da9", // this is the address payment credential hash
+    "policyId": "9ebffc56dfcbcff39113378280d535430f768b0821bbd293f7a4546bb8d73fa8", // mint contract paramenterized policy hash
+    "beneficiary": "3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da9", // the address payment credential hash
     "status": "Issued",
     "metadata": {
         "data": {
@@ -131,7 +132,8 @@ Success? true
 New transaction will have the token with the new metadata:
 ```json
 {
-    "beneficiary": "3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da9", // this is the address payment credential hash
+    "policyId": "9ebffc56dfcbcff39113378280d535430f768b0821bbd293f7a4546bb8d73fa8", // mint contract paramenterized policy hash
+    "beneficiary": "3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da9", // the address payment credential hash
     "status": "Claimed",
     "metadata": {
         "data": {

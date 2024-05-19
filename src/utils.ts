@@ -1,4 +1,4 @@
-import { Lucid, MintingPolicy, SpendingValidator, applyParamsToScript, toHex, fromHex, Constr, applyDoubleCborEncoding, Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Lucid, MintingPolicy, SpendingValidator, applyParamsToScript, toHex, fromHex, applyDoubleCborEncoding, Data, C } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import blueprint from "../plutus.json" assert { type: "json" };
 
 export type Validators = {
@@ -90,12 +90,13 @@ export const MintRedeemer = MintRedeemerSchema as unknown as MintRedeemer;
 
 const ClaimRedeemerSchema = Data.Enum([
   Data.Literal("ClaimToken"),
-  Data.Literal("BurnToken")
+  Data.Object({ BurnToken: Data.Object({ policy: PolicySchema }) })
 ]);
 export type ClaimRedeemer = Data.Static<typeof ClaimRedeemerSchema>;
 export const ClaimRedeemer = ClaimRedeemerSchema as unknown as ClaimRedeemer;
 
 const DatumMetadataSchema = Data.Object({
+  policyId: Data.Bytes({ minLength: 32, maxLength: 32 }),
   beneficiary: Data.Bytes(),
   status: Data.Bytes(),
   metadata: Data.Object({
@@ -116,10 +117,10 @@ export function applyParams(
   nonce?: string
 ): AppliedValidators {
 
-  const redeemParams = Data.from(Data.to(policy, Policy))
+  // const redeemParams = Data.from(Data.to(policy, Policy))
   const redeem: SpendingValidator = {
     type: "PlutusV2",
-    script: applyDoubleCborEncoding(applyParamsToScript(redeem_script, [redeemParams]))
+    script: applyDoubleCborEncoding(redeem_script)
   };
   const lockAddress = lucid.utils.validatorToAddress(redeem);
   const scriptHash = lucid.utils.validatorToScriptHash(redeem);
@@ -162,4 +163,10 @@ export function randomNonce(s = 32): string {
   }
   console.log('Nonce:', nonce);
   return nonce;
+}
+
+export function hashPolicy(policy: Policy): string {
+  const cborData = Data.to(policy, Policy);
+  // console.log('CborData:', cborData);
+  return toHex(C.hash_blake2b256(fromHex(cborData)));
 }

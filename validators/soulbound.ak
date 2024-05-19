@@ -1,8 +1,6 @@
 use aiken/transaction.{ScriptContext}
 use soulbound/functions.{mint_validator, redeem_validator}
-use soulbound/types.{
-  ClaimRedeemerData, DatumData, MintParams, Policy, RedeemerData,
-}
+use soulbound/types.{ClaimRedeemerData, DatumData, MintParams, RedeemerData}
 
 validator(params: MintParams) {
   fn mint(redeemer: RedeemerData, ctx: ScriptContext) -> Bool {
@@ -11,12 +9,12 @@ validator(params: MintParams) {
   }
 }
 
-validator(policy: Policy) {
+validator {
   fn redeem(
     datum: DatumData,
     rdmr: ClaimRedeemerData,
     ctx: ScriptContext,
   ) -> Bool {
-    redeem_validator(policy, datum, rdmr, ctx)
+    redeem_validator(datum, rdmr, ctx)
   }
 }
