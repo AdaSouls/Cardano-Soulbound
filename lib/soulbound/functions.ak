@@ -1,4 +1,7 @@
+use aiken/builtin.{serialise_data}
+use aiken/bytearray
 use aiken/dict
+use aiken/hash.{Blake2b_256, Hash, blake2b_256}
 use aiken/interval
 use aiken/list
 use aiken/transaction.{
@@ -29,6 +32,7 @@ pub fn mint_validator(
     )?
   expect tx.Mint(policy_id) = purpose
   let Transaction { outputs, mint, .. } = transaction
+  let policyHash = blake2b_256(serialise_data(policy))
   when redeemer is {
     Mint(msg) -> {
       expect msg == "Issued"
@@ -60,9 +64,9 @@ pub fn mint_validator(
       is {
         DatumHash(hash) -> {
           expect Some(data) = find_datum([output], dict.new(), hash)
-          check_datum(data, msg)?
+          check_datum(data, msg, policyHash)?
         }
-        InlineDatum(data) -> check_datum(data, msg)?
+        InlineDatum(data) -> check_datum(data, msg, policyHash)?
         _ -> False?
       }
     }
@@ -80,7 +84,6 @@ pub fn mint_validator(
 }
 
 pub fn redeem_validator(
-  policy: Policy,
   datum: DatumData,
   redeemer: ClaimRedeemerData,
   ctx: ScriptContext,
@@ -129,7 +132,10 @@ pub fn redeem_validator(
         }
       }
     }
-    BurnToken -> {
+    BurnToken(policy) -> {
+      let DatumData { policyId, .. }: DatumData = datum
+      expect
+        bytearray.compare(policyId, blake2b_256(serialise_data(policy))) == Equal
       let ScriptContext { transaction, purpose } = ctx
       expect
         check_policy(
@@ -231,7 +237,11 @@ fn check_policy_script(
   }
 }
 
-fn check_datum(data: Data, msg: ByteArray) -> Bool {
-  expect DatumData { status, .. }: DatumData = data
-  status == msg
+fn check_datum(
+  data: Data,
+  msg: ByteArray,
+  policyHash: Hash<Blake2b_256, ByteArray>,
+) -> Bool {
+  expect DatumData { policyId, status, .. }: DatumData = data
+  (policyId == policyHash)? && (bytearray.length(policyId) == 32)? && status == msg
 }

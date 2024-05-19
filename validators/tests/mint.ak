@@ -1,3 +1,5 @@
+use aiken/builtin.{serialise_data}
+use aiken/hash.{blake2b_256}
 use aiken/transaction.{InlineDatum,
   NoDatum, Output, ScriptContext, Transaction} as tx
 use aiken/transaction/credential.{Address, ScriptCredential}
@@ -27,7 +29,14 @@ test mint_ok() {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 1)
   let output =
     Output {
@@ -71,7 +80,14 @@ test mint_wrong_redeemer_msg() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "wrong_redeemer" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 1)
   let output =
     Output {
@@ -109,7 +125,14 @@ test mint_wrong_datum_msg() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "__issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "__issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 1)
   let output =
     Output {
@@ -148,7 +171,14 @@ test mint_wrong_asset_name() fail {
   let token_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 1)
   let mintValue: MintedValue =
     to_minted_value(from_asset(policy_id, token_name, 1))
@@ -188,7 +218,14 @@ test mint_wrong_quantity() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 1)
   let mintValue: MintedValue =
     to_minted_value(from_asset(policy_id, asset_name, 2))
@@ -228,7 +265,14 @@ test mint_wrong_quantity_negative() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, -1)
   let output =
     Output {
@@ -266,7 +310,14 @@ test mint_wrong_quantity_positive() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let data = DatumData { status: "Issued", beneficiary, metadata }
+  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let data =
+    DatumData {
+      status: "Issued",
+      beneficiary,
+      metadata,
+      policyId: datum_policy_id,
+    }
   let val: Value = from_asset(policy_id, asset_name, 2)
   let output =
     Output {

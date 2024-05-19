@@ -1,4 +1,4 @@
-use aiken/hash.{Blake2b_224, Hash}
+use aiken/hash.{Blake2b_224, Blake2b_256, Hash}
 use aiken/time.{PosixTime}
 use aiken/transaction/credential.{Credential, VerificationKey}
 
@@ -9,6 +9,8 @@ pub type DatumMetadata {
 }
 
 pub type DatumData {
+  // this is policy payload hash
+  policyId: Hash<Blake2b_256, ByteArray>,
   beneficiary: VerificationKeyHash,
   status: ByteArray,
   metadata: DatumMetadata,
@@ -21,7 +23,7 @@ pub type RedeemerData {
 
 pub type ClaimRedeemerData {
   ClaimToken
-  BurnToken
+  BurnToken { policy: Policy }
 }
 
 pub type VerificationKeyHash =
