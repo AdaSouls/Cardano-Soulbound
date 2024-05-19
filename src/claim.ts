@@ -1,4 +1,4 @@
-import { ClaimRedeemer, Credential, DatumMetadata, Policy, applyParams, readValidators } from "./utils.ts";
+import { ClaimRedeemer, Credential, DatumMetadata, Policy, applyParams, hashPolicy, readValidators } from "./utils.ts";
 import {
     Blockfrost,
     Constr,
@@ -43,7 +43,7 @@ const policy: Policy = {
     require: null,
 };
 
-const nonce = "9565b074c5c930aff80cac59a2278b68";
+const nonce = "9565b074c5c930aff80cac59a2278b70";
 const { redeem, policyId, lockAddress } = applyParams(validators.mint.script, validators.redeem.script, lucid, policy, nonce);
 
 
@@ -69,7 +69,11 @@ const data = Data.fromJson({
         }
     }
 })
+
+const policyHash = hashPolicy(policy);
+console.log('Policy Hash:', policyHash);
 const d: DatumMetadata = {
+    policyId: policyHash,
     beneficiary,
     status: msg,
     metadata: {
@@ -86,11 +90,12 @@ const claimRedeemer = Data.to(claimer, ClaimRedeemer);
 
 const tokenUtxo: UTxO = {
     address: lockAddress,
-    txHash: "4740635c320ffd50bc43f7ec480f4dd97fe890c6ec0536761d7b11c8bf65c814",
+    txHash: "cbe17436ce21e4d0665274a62ece2a2402643d7cedc7118b8c0e6f8cc1b3fa93",
     outputIndex: 0,
-    assets: { lovelace: BigInt(1_797_270), [assetName]: BigInt(1) },
-    datum: "d8799f581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da946497373756564d8799fa158383732323562636633613131316263326239653561623962323730663233376364323466663036656634383863623933383166666461386639a151536f756c626f756e645465737423303031a2446e616d6551536f756c626f756e64546573742330303143666f6f4362617201d87a80ffff"
+    assets: { lovelace: BigInt(1_943_810), [assetName]: BigInt(1) },
+    datum: "d8799f58209ebffc56dfcbcff39113378280d535430f768b0821bbd293f7a4546bb8d73fa8581c3dce7844f36b23b8c3f90afba40aa188e7f1d3f6e8acd1d544ed1da946497373756564d8799fa158383636366438663831396165666162383666313635646432343961626436646365623234613133386536363432336137326630326162613935a151536f756c626f756e645465737423303031a2446e616d6551536f756c626f756e64546573742330303143666f6f4362617201d87a80ffff"
 }
+const validTo = Date.now() + (60 * 60 * 24 * 1000); // 1 day
 
 const tx = await lucid
     .newTx()
@@ -108,6 +113,7 @@ const tx = await lucid
             [assetName]: BigInt(1)
         }
     )
+    .validTo(validTo)
     .complete();
 const txSigned = await tx.sign().complete();
 console.log(txSigned.toString());

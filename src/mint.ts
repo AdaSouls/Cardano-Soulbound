@@ -1,10 +1,8 @@
-import { applyParams, readValidators, MintRedeemer, DatumMetadata, Credential, Policy } from "./utils.ts";
+import { applyParams, readValidators, MintRedeemer, DatumMetadata, Policy, hashPolicy } from "./utils.ts";
 import {
     Blockfrost,
     Data,
     Lucid,
-    SpendingValidator,
-    applyDoubleCborEncoding,
     fromText,
     getAddressDetails,
 } from "https://deno.land/x/lucid@0.10.7/mod.ts";
@@ -42,7 +40,7 @@ const policy: Policy = {
     require: null,
 };
 
-const nonce = "9565b074c5c930aff80cac59a2278b68";
+const nonce = "9565b074c5c930aff80cac59a2278b70";
 const { mint, policyId, lockAddress } = applyParams(validators.mint.script, validators.redeem.script, lucid, policy, nonce);
 
 const utxos = await lucid?.wallet.getUtxos()!;
@@ -73,7 +71,11 @@ const data = Data.fromJson({
         }
     }
 })
+
+const policyHash = hashPolicy(policy);
+console.log('Policy Hash:', policyHash);
 const d: DatumMetadata = {
+    policyId: policyHash,
     beneficiary,
     status: msg,
     metadata: {
@@ -85,6 +87,7 @@ const d: DatumMetadata = {
 
 const datum = Data.to(d, DatumMetadata);
 console.log('Datum', datum);
+const validTo = Date.now() + (60 * 60 * 24 * 1000); // 1 day
 
 const tx = await lucid
     .newTx()
@@ -108,6 +111,7 @@ const tx = await lucid
         }
     )
     .addSignerKey(signerKey)
+    .validTo(validTo)
     .complete();
 const txSigned = await tx.sign().complete();
 console.log(txSigned.toString());

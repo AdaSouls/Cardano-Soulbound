@@ -1,5 +1,3 @@
-use aiken/builtin.{serialise_data}
-use aiken/hash.{blake2b_256}
 use aiken/transaction.{InlineDatum,
   NoDatum, Output, ScriptContext, Transaction} as tx
 use aiken/transaction/credential.{Address, ScriptCredential}
@@ -29,7 +27,8 @@ test mint_ok() {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",
@@ -80,7 +79,8 @@ test mint_wrong_redeemer_msg() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "wrong_redeemer" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",
@@ -125,7 +125,8 @@ test mint_wrong_datum_msg() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "__issued",
@@ -171,7 +172,8 @@ test mint_wrong_asset_name() fail {
   let token_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",
@@ -218,7 +220,8 @@ test mint_wrong_quantity() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",
@@ -265,7 +268,8 @@ test mint_wrong_quantity_negative() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",
@@ -310,7 +314,8 @@ test mint_wrong_quantity_positive() fail {
   let asset_name = #"000000"
   let redeemer = Mint { msg: "Issued" }
   let metadata = DatumMetadata { data: "soulbound", version: 1, extra: None }
-  let datum_policy_id = blake2b_256(serialise_data(policy))
+  let datum_policy_id =
+    #"8c914584a0a6d2f795bfaa68fa1714abfbc741744cf27ebe0021beee8e437c88"
   let data =
     DatumData {
       status: "Issued",

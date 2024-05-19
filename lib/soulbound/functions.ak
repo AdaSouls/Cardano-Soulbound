@@ -1,5 +1,5 @@
-use aiken/builtin.{serialise_data}
 use aiken/bytearray
+use aiken/cbor.{serialise}
 use aiken/dict
 use aiken/hash.{Blake2b_256, Hash, blake2b_256}
 use aiken/interval
@@ -32,9 +32,9 @@ pub fn mint_validator(
     )?
   expect tx.Mint(policy_id) = purpose
   let Transaction { outputs, mint, .. } = transaction
-  let policyHash = blake2b_256(serialise_data(policy))
   when redeemer is {
     Mint(msg) -> {
+      let policyHash = blake2b_256(serialise(policy))
       expect msg == "Issued"
       // TODO: allow multiple tokens mint/burn at once
       expect [(asset_name, amount)] =
@@ -135,7 +135,7 @@ pub fn redeem_validator(
     BurnToken(policy) -> {
       let DatumData { policyId, .. }: DatumData = datum
       expect
-        bytearray.compare(policyId, blake2b_256(serialise_data(policy))) == Equal
+        bytearray.compare(policyId, blake2b_256(serialise(policy))) == Equal
       let ScriptContext { transaction, purpose } = ctx
       expect
         check_policy(
@@ -245,3 +245,71 @@ fn check_datum(
   expect DatumData { policyId, status, .. }: DatumData = data
   (policyId == policyHash)? && (bytearray.length(policyId) == 32)? && status == msg
 }
+// Function to hash the serialized Policy
+// fn hash_policy(policy: Policy) -> ByteArray {
+//   let serialized_policy = serialize_policy(policy)
+//   blake2b_256(serialized_policy)
+// }
+
+// // Function to serialize the Policy type
+// fn serialize_policy(policy: Policy) -> ByteArray {
+//   let pType_bytes = serialize_script_type(policy.pType)
+//   let pKeyHash_bytes =
+//     when policy.pKeyHash is {
+//       Some(keyHash) -> serialize_verification_key_hash(keyHash)
+//       None -> #[]
+//     }
+
+//   let pSlot_bytes =
+//     when policy.pSlot is {
+//       Some(slot) -> serialize_posix_time(slot)
+//       None -> #[]
+//     }
+
+//   let pRequire_bytes =
+//     when policy.pRequire is {
+//       Some(req) -> serialize_int(req)
+//       None -> #[]
+//     }
+
+//   let scripts_bytes =
+//     when policy.scripts is {
+//       Some(scripts) -> serialize_native_scripts(scripts)
+//       None -> #[]
+//     }
+
+//   bytearray.concat(
+//     #[],
+//     // #[pType_bytes, pKeyHash_bytes, pSlot_bytes, pRequire_bytes, scripts_bytes],
+//     #[],
+//   )
+// }
+
+// // Assuming basic serialization functions for these types
+// fn serialize_script_type(script_type: ScriptType) -> ByteArray {
+//   // Replace with actual serialization logic
+//   // bytearray.from_string(script_type.to_string())
+//   #[]
+// }
+
+// fn serialize_verification_key_hash(key_hash: VerificationKeyHash) -> ByteArray {
+//   // Replace with actual serialization logic
+//   key_hash
+// }
+
+// fn serialize_posix_time(time: PosixTime) -> ByteArray {
+//   // Replace with actual serialization logic
+//   time
+// }
+
+// fn serialize_int(int: Int) -> ByteArray {
+//   // Convert the integer to bytes (big-endian representation)
+//   ByteArray.from_int(int)
+// }
+
+// fn serialize_native_scripts(scripts: List<NativeScript>) -> ByteArray {
+//   // Replace with actual serialization logic
+//   let script_bytes =
+//     list.map(scripts, fn(script) { ByteArray.from_string(script.to_string()) })
+//   ByteArray.concat(script_bytes)
+// }
